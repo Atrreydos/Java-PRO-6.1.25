@@ -1,10 +1,11 @@
 package org.example;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
 import org.example.annotations.AfterSuite;
 import org.example.annotations.BeforeSuite;
 import org.example.annotations.Test;
@@ -13,66 +14,76 @@ public class TestRunner {
 
   public static void runTests(Class<TestClass> testClass) throws Exception {
     System.out.println("Запуск runTests для класса " + testClass.getName());
-    var declaredMethods = testClass.getDeclaredMethods();
-    checkMethods(declaredMethods);
+    var methods = testClass.getDeclaredMethods();
+    List<Method> beforeSuiteMethods = new ArrayList<>();
+    List<Method> afterSuiteMethods = new ArrayList<>();
+    List<Method> testMethods = new ArrayList<>();
+
+    for (Method method : methods) {
+      if (method.isAnnotationPresent(BeforeSuite.class)) {
+        beforeSuiteMethods.add(method);
+      }
+      if (method.isAnnotationPresent(AfterSuite.class)) {
+        afterSuiteMethods.add(method);
+      }
+      if (method.isAnnotationPresent(Test.class)) {
+        testMethods.add(method);
+      }
+    }
+
+    checkMethods(beforeSuiteMethods, BeforeSuite.class.getName());
+    checkMethods(afterSuiteMethods, AfterSuite.class.getName());
 
     Constructor<TestClass> constructor = testClass.getConstructor();
     TestClass testClassObject = constructor.newInstance();
 
-    invokeMethodWithAnnotation(testClassObject, BeforeSuite.class);
-    invokeMethodsWithTestAnnotation(testClassObject);
-    invokeMethodWithAnnotation(testClassObject, AfterSuite.class);
+    invokeMethods(testClassObject, beforeSuiteMethods);
+    invokeTestMethods(testClassObject, testMethods);
+    invokeMethods(testClassObject, afterSuiteMethods);
   }
 
-  private static void checkMethods(Method[] methods) {
-    System.out.println("Проверка методов.");
-    int beforeSuiteCount = 0;
-    int afterSuiteCount = 0;
-    for (Method method : methods) {
-      if (method.isAnnotationPresent(BeforeSuite.class)) {
-        beforeSuiteCount++;
-      }
-      if (method.isAnnotationPresent(AfterSuite.class)) {
-        afterSuiteCount++;
-      }
-    }
-
-    System.out.printf("beforeSuiteCount = %d, afterSuiteCount = %d\n", beforeSuiteCount,
-        afterSuiteCount);
-    if (beforeSuiteCount > 1) {
+  private static void checkMethods(List<Method> methods, String annotationName) {
+    System.out.printf("Проверка методов с аннотацией %s. Количество методов = %d.\n",
+        annotationName,
+        methods.size());
+    if (methods.size() > 1) {
       throw new RuntimeException(
-          "Недопустимое количество методов с аннотацией BeforeSuite = " + beforeSuiteCount);
+          String.format("Недопустимое количество: %d методов с аннотацией %s.", methods.size(),
+              annotationName));
     }
-    if (afterSuiteCount > 1) {
-      throw new RuntimeException(
-          "Недопустимое количество методов с аннотацией AfterSuite = " + afterSuiteCount);
-    }
-    System.out.println("Проверка методов прошла успешно.");
-  }
 
-  private static void invokeMethodWithAnnotation(TestClass testClassObject,
-      Class<? extends Annotation> annotationClass)
-      throws Exception {
-    for (Method method : testClassObject.getClass().getDeclaredMethods()) {
-      if (method.isAnnotationPresent(annotationClass)) {
-        method.invoke(testClassObject);
+    methods.forEach(method -> {
+      if (Modifier.isStatic(method.getModifiers())) {
+        throw new RuntimeException(
+            String.format("Аннотация %s проставлена над статическим методом %s.", annotationName,
+                method.getName()));
       }
-    }
+    });
+
+    System.out.printf("Проверка методов с аннотацией %s прошла успешно.\n", annotationName);
   }
 
-  private static void invokeMethodsWithTestAnnotation(TestClass testClassObject) {
-    var testMethods = Arrays.stream(testClassObject.getClass().getDeclaredMethods())
-        .filter(testMethod -> testMethod.isAnnotationPresent(Test.class))
-        .sorted((m1, m2) ->
-            m2.getAnnotation(Test.class).priority() - m1.getAnnotation(Test.class).priority())
-        .toList();
-
-    testMethods.forEach(method -> {
+  private static void invokeMethods(TestClass testClassObject,
+      List<Method> methods) {
+    methods.forEach(method -> {
       try {
         method.invoke(testClassObject);
       } catch (IllegalAccessException | InvocationTargetException e) {
         throw new RuntimeException(e);
       }
     });
+  }
+
+  private static void invokeTestMethods(TestClass testClassObject, List<Method> testMethods) {
+    testMethods.stream()
+        .sorted((m1, m2) ->
+            m2.getAnnotation(Test.class).priority() - m1.getAnnotation(Test.class).priority())
+        .forEach(method -> {
+          try {
+            method.invoke(testClassObject);
+          } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+          }
+        });
   }
 }
