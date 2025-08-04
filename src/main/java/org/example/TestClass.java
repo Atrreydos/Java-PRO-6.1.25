@@ -32,7 +32,7 @@ public class TestClass {
   }
 
   @BeforeSuite
-  public void methodBefore() {
+  public static void methodBefore() {
     System.out.println("method before");
   }
 
@@ -42,7 +42,7 @@ public class TestClass {
 //  }
 
   @AfterSuite
-  public void methodAfter() {
+  public static void methodAfter() {
     System.out.println("method after");
   }
 

@@ -53,9 +53,9 @@ public class TestRunner {
     }
 
     methods.forEach(method -> {
-      if (Modifier.isStatic(method.getModifiers())) {
+      if (!Modifier.isStatic(method.getModifiers())) {
         throw new RuntimeException(
-            String.format("Аннотация %s проставлена над статическим методом %s.", annotationName,
+            String.format("Аннотация %s проставлена не над статическим методом %s.", annotationName,
                 method.getName()));
       }
     });
