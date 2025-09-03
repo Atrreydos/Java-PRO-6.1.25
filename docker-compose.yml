@@ -1,7 +1,7 @@
 name: postgres
 services:
   postgres:
-    image: postgres:15.2-alpine
+    image: postgres:15-alpine
     ports:
       - "5433:5432"
     environment:
