@@ -13,38 +13,38 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserService {
 
-  private final UserRepository repository;
+  private final UserRepository userRepository;
 
   public User createUserWithName(String username) {
-    var user = repository.save(User.builder().userName(username).build());
+    var user = userRepository.save(User.builder().userName(username).build());
     log.info("Сохранен пользователь {}", user);
 
     return user;
   }
 
   public User getUser(Long id) {
-    var user = repository.findById(id).orElseThrow(EntityNotFoundException::new);
+    var user = userRepository.findById(id).orElseThrow(EntityNotFoundException::new);
     log.info("Получен пользователь {}", user);
 
     return user;
   }
 
   public User getUserByName(String name) {
-    var user = repository.findByUserName(name).orElseThrow(EntityNotFoundException::new);
+    var user = userRepository.findByUserName(name).orElseThrow(EntityNotFoundException::new);
     log.info("Получен пользователь {}", user);
 
     return user;
   }
 
   public List<User> getAllUsers() {
-    var users = repository.findAll();
+    var users = userRepository.findAll();
     log.info("Получены все пользователи: {}", users);
 
     return users;
   }
 
   public User updateUser(User user) {
-    var updatedUser = repository.save(user);
+    var updatedUser = userRepository.save(user);
     log.info("Обновлен пользователь: {}", updatedUser);
 
     return updatedUser;
@@ -52,11 +52,16 @@ public class UserService {
 
   public void deleteUser(Long id) {
     log.info("Удаляется пользователь с id: {}", id);
-    repository.deleteById(id);
+    userRepository.deleteById(id);
   }
 
   public void deleteAll() {
     log.info("Удаляется все пользователи");
-    repository.deleteAll();
+    userRepository.deleteAll();
+  }
+
+  public void getProductsByUser(Long userId) {
+    log.info("Получение всех продуктов для пользователя {}", userId);
+    userRepository.deleteAll();
   }
 }
