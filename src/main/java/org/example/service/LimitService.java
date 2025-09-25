@@ -5,8 +5,8 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dto.LimitDto;
-import org.example.dto.ReduceLimitRequest;
-import org.example.dto.ReduceLimitResponse;
+import org.example.dto.ChangeLimitRequest;
+import org.example.dto.ChangeLimitResponse;
 import org.example.entity.Limit;
 import org.example.repository.LimitRepository;
 import org.springframework.stereotype.Service;
@@ -30,8 +30,8 @@ public class LimitService {
         .toList();
   }
 
-  public ReduceLimitResponse reduceLimit(ReduceLimitRequest request) {
-    log.info("Начата операция уменьшения лимита на сумму: {} для клиента {}.", request.amount(), request.clientId());
+  public ChangeLimitResponse changeLimit(ChangeLimitRequest request) {
+    log.info("Начата операция изменения лимита на сумму: {} для клиента {}.", request.amount(), request.clientId());
 
     var limit = limitRepository.findByClientId(request.clientId())
         .orElseGet(() -> limitRepository.save(Limit.builder().clientId(request.clientId()).amount(LIMIT_DEFAULT_AMOUNT).build()));
@@ -40,13 +40,13 @@ public class LimitService {
     if (finalAmount.compareTo(BigDecimal.ZERO) < 0) {
       log.info("Операция невозможна, превышен лимит.");
 
-      return new ReduceLimitResponse(false);
+      return new ChangeLimitResponse(false);
     } else {
       log.info("Операция возможна, итоговый лимит: {}.", finalAmount);
       limit.setAmount(finalAmount);
       limitRepository.save(limit);
 
-      return new ReduceLimitResponse(true);
+      return new ChangeLimitResponse(true);
     }
   }
 

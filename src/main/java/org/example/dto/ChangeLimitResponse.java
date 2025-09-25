@@ -1,5 +1,5 @@
 package org.example.dto;
 
-public record ReduceLimitResponse(
+public record ChangeLimitResponse(
     boolean success) {
 }
