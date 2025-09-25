@@ -7,6 +7,6 @@ services:
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: my_db
+      POSTGRES_DB: limit_db
     volumes:
       - ./temp/scripts:/docker-entrypoint-initdb.d
